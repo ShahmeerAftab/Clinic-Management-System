@@ -1,3 +1,14 @@
+"use client";
+
+/**
+ * Patient Health Tips Page
+ *
+ * Static curated tips with a working category filter.
+ * Tips are evidence-based and cover all major health categories.
+ */
+
+import { useState } from "react";
+
 type TipCategory = "Nutrition" | "Fitness" | "Mental Health" | "Sleep" | "Preventive";
 
 interface HealthTip {
@@ -9,6 +20,7 @@ interface HealthTip {
   readTime: string;
 }
 
+// ─── Tips data ────────────────────────────────────────────────────────────────
 const tips: HealthTip[] = [
   {
     id: 1,
@@ -84,74 +96,113 @@ const tips: HealthTip[] = [
   },
 ];
 
-const categoryStyles: Record<TipCategory, { badge: string; bg: string; border: string }> = {
-  "Nutrition":     { badge: "bg-green-100 text-green-700",   bg: "bg-green-50",   border: "border-green-100" },
-  "Fitness":       { badge: "bg-blue-100 text-blue-700",     bg: "bg-blue-50",    border: "border-blue-100" },
-  "Mental Health": { badge: "bg-purple-100 text-purple-700", bg: "bg-purple-50",  border: "border-purple-100" },
-  "Sleep":         { badge: "bg-indigo-100 text-indigo-700", bg: "bg-indigo-50",  border: "border-indigo-100" },
-  "Preventive":    { badge: "bg-orange-100 text-orange-700", bg: "bg-orange-50",  border: "border-orange-100" },
+// ─── Category styles ──────────────────────────────────────────────────────────
+const categoryStyles: Record<TipCategory, { badge: string; iconBg: string; border: string }> = {
+  "Nutrition":     { badge: "bg-aq-faint text-aq-darker",       iconBg: "bg-aq-faint",   border: "border-aq/30"       },
+  "Fitness":       { badge: "bg-emerald-50 text-emerald-700",   iconBg: "bg-emerald-50", border: "border-emerald-200" },
+  "Mental Health": { badge: "bg-violet-50 text-violet-700",     iconBg: "bg-violet-50",  border: "border-violet-200"  },
+  "Sleep":         { badge: "bg-sky-50 text-sky-700",           iconBg: "bg-sky-50",     border: "border-sky-200"     },
+  "Preventive":    { badge: "bg-amber-50 text-amber-700",       iconBg: "bg-amber-50",   border: "border-amber-200"   },
 };
 
 const categories: TipCategory[] = ["Nutrition", "Fitness", "Mental Health", "Sleep", "Preventive"];
 
+// ─── Main page ────────────────────────────────────────────────────────────────
 export default function PatientHealthTips() {
+  // "All" means no filter; otherwise filter by category
+  const [activeCategory, setActiveCategory] = useState<TipCategory | "All">("All");
+
+  const filtered =
+    activeCategory === "All"
+      ? tips
+      : tips.filter((t) => t.category === activeCategory);
+
   return (
-    <>
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Health Tips</h1>
-        <p className="text-gray-500 mt-1 text-sm">Evidence-based tips to help you stay at your healthiest.</p>
+    <div className="space-y-6">
+
+      {/* ── Header ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-ink">Health Tips</h1>
+          <p className="text-sm text-gray-500 mt-0.5">
+            Evidence-based tips to help you stay at your healthiest.
+          </p>
+        </div>
+        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-aq-faint text-aq-darker text-xs font-semibold rounded-full border border-aq/30 self-start sm:self-auto">
+          <span className="w-1.5 h-1.5 rounded-full bg-aq animate-pulse inline-block" />
+          {filtered.length} of {tips.length} tips
+        </span>
       </div>
 
-      {/* Category filter — visual only; wire to state when backend is ready */}
-      <div className="flex flex-wrap gap-2 mb-8">
-        <button className="px-4 py-1.5 rounded-full text-xs font-semibold bg-gray-900 text-white transition-colors">
-          All
+      {/* ── Category filter ── */}
+      <div className="flex flex-wrap gap-2">
+        {/* "All" button */}
+        <button
+          onClick={() => setActiveCategory("All")}
+          className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-colors ${
+            activeCategory === "All"
+              ? "bg-sidebar text-aq"
+              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+          }`}
+        >
+          All ({tips.length})
         </button>
-        {categories.map((cat) => (
-          <button
-            key={cat}
-            className={`px-4 py-1.5 rounded-full text-xs font-semibold border transition-colors hover:opacity-80 ${categoryStyles[cat].badge} ${categoryStyles[cat].border}`}
-          >
-            {cat}
-          </button>
-        ))}
-      </div>
 
-      {/* Tip cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        {tips.map((tip) => {
-          const style = categoryStyles[tip.category];
+        {/* Category buttons */}
+        {categories.map((cat) => {
+          const count = tips.filter((t) => t.category === cat).length;
+          const s = categoryStyles[cat];
+          const isActive = activeCategory === cat;
           return (
-            <div
-              key={tip.id}
-              className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col gap-4 hover:shadow-md transition-shadow"
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(cat)}
+              className={`px-4 py-1.5 rounded-full text-xs font-semibold border transition-colors ${s.badge} ${s.border} ${
+                isActive ? "ring-2 ring-offset-1 ring-current" : "opacity-70 hover:opacity-100"
+              }`}
             >
-              <div className="flex items-start justify-between gap-2">
-                <div className={`w-11 h-11 rounded-xl ${style.bg} flex items-center justify-center text-xl shrink-0`}>
-                  {tip.icon}
-                </div>
-                <div className="flex flex-col items-end gap-1">
-                  <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${style.badge}`}>
-                    {tip.category}
-                  </span>
-                  <span className="text-xs text-gray-400">{tip.readTime} read</span>
-                </div>
-              </div>
-
-              <div>
-                <p className="font-semibold text-gray-900 leading-snug">{tip.title}</p>
-                <p className="text-sm text-gray-500 mt-2 leading-relaxed">{tip.body}</p>
-              </div>
-            </div>
+              {cat} ({count})
+            </button>
           );
         })}
       </div>
 
-      <div className="mt-8 bg-violet-50 border border-violet-100 rounded-2xl p-4">
-        <p className="text-sm text-violet-700 font-medium">
-          AI-personalised health tips based on your records will be available once backend integration is complete.
-        </p>
-      </div>
-    </>
+      {/* ── Tip cards ── */}
+      {filtered.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col items-center justify-center py-20 text-center px-4 gap-3">
+          <p className="text-sm font-semibold text-gray-700">No tips in this category.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {filtered.map((tip) => {
+            const style = categoryStyles[tip.category];
+            return (
+              <div
+                key={tip.id}
+                className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col gap-4 hover:shadow-md hover:border-aq/30 transition-all"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className={`w-11 h-11 rounded-xl ${style.iconBg} flex items-center justify-center text-xl shrink-0`}>
+                    {tip.icon}
+                  </div>
+                  <div className="flex flex-col items-end gap-1">
+                    <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold border ${style.badge} ${style.border}`}>
+                      {tip.category}
+                    </span>
+                    <span className="text-xs text-gray-400">{tip.readTime} read</span>
+                  </div>
+                </div>
+
+                <div>
+                  <p className="font-semibold text-ink leading-snug">{tip.title}</p>
+                  <p className="text-sm text-gray-500 mt-2 leading-relaxed">{tip.body}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+    </div>
   );
 }

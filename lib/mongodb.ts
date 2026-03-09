@@ -1,9 +1,25 @@
 import mongoose from "mongoose";
-const MONGODB_URI= process.env.MONGODB_URI
-if (!MONGODB_URI) {
-   throw new Error("Define mongoDBURL in env.local file")
+
+declare global {
+  var _mongooseConnectPromise: Promise<typeof mongoose> | undefined;
 }
-export const connectdb = async() => {
-    if (mongoose.connection.readyState===1)return
-    await mongoose.connect(MONGODB_URI !)
-}
+
+export const connectdb = async () => {
+  if (mongoose.connection.readyState === 1) return; // already connected
+
+  const uri = process.env.MONGODB_URI;
+  if (!uri) throw new Error("MONGODB_URI is not defined in .env.local");
+
+  if (!global._mongooseConnectPromise) {
+    global._mongooseConnectPromise = mongoose.connect(uri, {
+      serverSelectionTimeoutMS: 10000,
+      connectTimeoutMS: 15000,
+      socketTimeoutMS: 20000,
+      // useNewUrlParser & useUnifiedTopology removed for Mongoose v7+
+    });
+  }
+
+  await global._mongooseConnectPromise;
+};
+
+export default connectdb;

@@ -1,49 +1,48 @@
-"use client";
-
-import { useState } from "react";
-
-// Dummy data
-const dummyAppointments = [
-  { id: 1, doctor: "Dr. Ahmed", date: "2026-03-01 10:00 AM", status: "Completed" },
-  { id: 2, doctor: "Dr. Sara", date: "2026-03-05 2:00 PM", status: "Pending" },
-];
-
-const dummyPrescriptions = [
-  { id: 1, doctor: "Dr. Ahmed", medicine: "Paracetamol", dosage: "2/day", notes: "Take after meals", date: "2026-03-01 10:30 AM" },
-];
-
 export default function PatientProfilePage() {
-  const [appointments] = useState(dummyAppointments);
-  const [prescriptions] = useState(dummyPrescriptions);
-
   return (
-    <div className="p-8">
-      <h1 className="text-2xl font-bold mb-6">Patient Profile</h1>
+    <div className="space-y-6">
 
-      {/* ── Medical History Timeline ── */}
-      <h2 className="text-xl font-semibold mb-4">Medical History Timeline</h2>
-
-      <div className="space-y-4">
-        {appointments.map(a => (
-          <div key={a.id} className="border-l-4 border-blue-500 pl-4 py-2">
-            <p><strong>Appointment with:</strong> {a.doctor}</p>
-            <p><strong>Date:</strong> {a.date}</p>
-            <p><strong>Status:</strong> {a.status}</p>
-          </div>
-        ))}
-
-        {prescriptions.map(p => (
-          <div key={p.id} className="border-l-4 border-green-500 pl-4 py-2">
-            <p><strong>Doctor:</strong> {p.doctor}</p>
-            <p><strong>Medicine:</strong> {p.medicine}</p>
-            <p><strong>Dosage:</strong> {p.dosage}</p>
-            <p><strong>Notes:</strong> {p.notes}</p>
-            <p className="text-xs text-gray-500">{p.date}</p>
-          </div>
-        ))}
-
-        {appointments.length === 0 && prescriptions.length === 0 && <p>No history available.</p>}
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-bold text-ink">Patient Profile</h1>
+        <p className="text-sm text-gray-500 mt-0.5">Detailed medical history and appointment records.</p>
       </div>
+
+      {/* Medical history card */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="h-1 bg-gradient-to-r from-aq to-aq-dark" />
+        <div className="p-6">
+          <h2 className="text-base font-semibold text-ink mb-1">Medical History Timeline</h2>
+          <p className="text-xs text-gray-400 mb-8">
+            Appointment and prescription history will appear here once patient data is loaded from the backend.
+          </p>
+
+          <div className="flex flex-col items-center py-12 text-center gap-3">
+            <div className="w-14 h-14 rounded-2xl bg-aq-faint flex items-center justify-center">
+              <svg className="w-6 h-6 text-aq-darker" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-gray-700">No history available</p>
+              <p className="text-xs text-gray-400 mt-1.5 max-w-xs leading-relaxed">
+                Appointment and prescription history will appear here once the patient&apos;s data is connected.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Info banner */}
+      <div className="bg-aq-faint border border-aq/20 rounded-2xl px-5 py-4 flex items-center gap-3">
+        <svg className="w-5 h-5 text-aq-darker shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <p className="text-sm text-aq-darker font-medium">
+          Backend integration is in progress — patient data will load once connected.
+        </p>
+      </div>
+
     </div>
   );
 }
