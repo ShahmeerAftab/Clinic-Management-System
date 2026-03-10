@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import Groq from "groq-sdk";
+import { verifyAuth, unauthorized } from "@/lib/auth";
 
 const SYSTEM_PROMPT = `You are MediCare Pro's AI Health Assistant — a friendly, knowledgeable, and empathetic virtual health advisor built into a clinic management system.
 
@@ -21,6 +22,9 @@ Rules you must always follow:
 Always end your response with a gentle reminder when appropriate: "Remember, always consult your doctor for personalized medical advice."`;
 
 export async function POST(req: Request) {
+  const user = verifyAuth(req);
+  if (!user) return unauthorized();
+
   try {
     const { message, history } = await req.json();
 
@@ -35,7 +39,6 @@ export async function POST(req: Request) {
 
     const groq = new Groq({ apiKey });
 
-    // Build message history for Groq (OpenAI-compatible format)
     const messages: { role: "system" | "user" | "assistant"; content: string }[] = [
       { role: "system", content: SYSTEM_PROMPT },
     ];

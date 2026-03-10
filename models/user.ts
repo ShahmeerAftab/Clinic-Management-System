@@ -18,7 +18,13 @@ const UserSchema = new mongoose.Schema({
     type: String,
     enum: ["admin", "doctor", "receptionist", "patient"],
     default: "patient"
+  },
+  specialization: {
+    type: String,
+    default: ""
   }
 });
+
+UserSchema.index({ email: 1 });
 
 export default mongoose.models.User || mongoose.model("User", UserSchema);

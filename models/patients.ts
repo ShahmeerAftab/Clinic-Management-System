@@ -11,5 +11,7 @@ const patientSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
+patientSchema.index({ userId: 1 });
+
 // Guard against "Cannot overwrite model" error during Next.js hot-reload
 export default mongoose.models.Patient ?? mongoose.model("Patient", patientSchema);

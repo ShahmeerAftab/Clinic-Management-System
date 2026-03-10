@@ -1,13 +1,8 @@
-/**
- * /api/health-records/[id] — GET, PUT, DELETE for a single health record
- */
-
 import { connectdb } from "@/lib/mongodb";
 import { verifyAuth, unauthorized } from "@/lib/auth";
 import HealthRecord from "@/models/healthRecord";
 import { NextResponse } from "next/server";
 
-// GET /api/health-records/[id]
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -30,7 +25,7 @@ export async function GET(
   return NextResponse.json(record);
 }
 
-// PUT /api/health-records/[id] — Update a record (doctor/admin only)
+// doctor/admin only
 export async function PUT(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -61,7 +56,7 @@ export async function PUT(
   return NextResponse.json(record);
 }
 
-// DELETE /api/health-records/[id] — Delete a record (doctor/admin only)
+// doctor/admin only
 export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ id: string }> }

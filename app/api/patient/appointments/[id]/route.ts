@@ -1,17 +1,9 @@
-/**
- * /api/patient/appointments/[id] — PUT (update) and DELETE (cancel/remove)
- *
- * Patients can only modify their OWN appointments.
- * The query ensures patientID matches before updating or deleting.
- */
-
 import { connectdb } from "@/lib/mongodb";
 import { verifyAuth, unauthorized } from "@/lib/auth";
 import Patient from "@/models/patients";
 import Appointment from "@/models/appointment";
 import { NextResponse } from "next/server";
 
-// PUT /api/patient/appointments/[id] — Update status (e.g. cancel)
 export async function PUT(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -30,7 +22,15 @@ export async function PUT(
 
   const body = await req.json();
 
-  // Only update if the appointment belongs to this patient
+  // patients can only cancel, not mark Completed
+  if (body.status && body.status !== "Cancelled") {
+    return NextResponse.json(
+      { message: "Patients can only cancel appointments." },
+      { status: 403 }
+    );
+  }
+
+  // scoped to this patient's appointments only
   const appointment = await Appointment.findOneAndUpdate(
     { _id: id, patientID: patient._id },
     { $set: body },
@@ -47,7 +47,6 @@ export async function PUT(
   return NextResponse.json(appointment);
 }
 
-// DELETE /api/patient/appointments/[id] — Cancel/remove an appointment
 export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -64,7 +63,7 @@ export async function DELETE(
     return NextResponse.json({ message: "Patient not found" }, { status: 404 });
   }
 
-  // Only delete if the appointment belongs to this patient
+  // scoped to this patient's appointments only
   const appointment = await Appointment.findOneAndDelete({
     _id: id,
     patientID: patient._id,

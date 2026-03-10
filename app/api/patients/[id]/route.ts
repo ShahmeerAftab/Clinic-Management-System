@@ -1,21 +1,19 @@
-/**
- * /api/patients/[id] — GET, PUT, DELETE for a single patient
- *
- * All endpoints are protected: requires a valid JWT in the Authorization header.
- */
-
 import { connectdb } from "@/lib/mongodb";
 import Patient from "@/models/patients";
 import { NextResponse } from "next/server";
 import { verifyAuth, unauthorized } from "@/lib/auth";
 
-// GET /api/patients/:id — Fetch one patient
+const STAFF_ROLES = ["admin", "doctor", "receptionist"];
+
 export const GET = async (
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) => {
   const user = verifyAuth(req);
   if (!user) return unauthorized();
+  if (!STAFF_ROLES.includes(user.role)) {
+    return NextResponse.json({ message: "Access denied. Staff only." }, { status: 403 });
+  }
 
   await connectdb();
   const { id } = await params;
@@ -24,13 +22,15 @@ export const GET = async (
   return NextResponse.json(patient);
 };
 
-// PUT /api/patients/:id — Update a patient
 export const PUT = async (
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) => {
   const user = verifyAuth(req);
   if (!user) return unauthorized();
+  if (!STAFF_ROLES.includes(user.role)) {
+    return NextResponse.json({ message: "Access denied. Staff only." }, { status: 403 });
+  }
 
   await connectdb();
   const { id } = await params;
@@ -40,13 +40,16 @@ export const PUT = async (
   return NextResponse.json(updated);
 };
 
-// DELETE /api/patients/:id — Delete a patient
+// admin only
 export const DELETE = async (
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) => {
   const user = verifyAuth(req);
   if (!user) return unauthorized();
+  if (!["admin"].includes(user.role)) {
+    return NextResponse.json({ message: "Access denied. Admins only." }, { status: 403 });
+  }
 
   await connectdb();
   const { id } = await params;

@@ -14,6 +14,13 @@ import { useEffect, useState } from "react";
 import { fetchWithAuth } from "@/lib/fetchWithAuth";
 import type { Appointment, AppointmentStatus } from "@/types";
 
+// Doctor option from /api/users?role=doctor
+interface DoctorOption {
+  _id: string;
+  name: string;
+  specialization?: string;
+}
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function formatDate(dateStr: string) {
@@ -63,15 +70,17 @@ function BookingForm({
   onSubmit,
   onCancel,
   submitting,
+  doctors,
 }: {
-  onSubmit: (data: { doctor: string; date: string; time: string; reason: string }) => void;
+  onSubmit: (data: { doctorId: string; doctor: string; date: string; time: string; reason: string }) => void;
   onCancel: () => void;
   submitting: boolean;
+  doctors: DoctorOption[];
 }) {
-  const [doctor, setDoctor] = useState("");
-  const [date, setDate]     = useState("");
-  const [time, setTime]     = useState("");
-  const [reason, setReason] = useState("");
+  const [doctorId, setDoctorId] = useState("");
+  const [date, setDate]         = useState("");
+  const [time, setTime]         = useState("");
+  const [reason, setReason]     = useState("");
 
   const inputCls =
     "w-full px-4 py-2.5 text-sm bg-gray-50 border border-gray-200 rounded-xl text-ink " +
@@ -80,7 +89,14 @@ function BookingForm({
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    onSubmit({ doctor, date, time, reason });
+    const selected = doctors.find((d) => d._id === doctorId);
+    onSubmit({
+      doctorId,
+      doctor: selected ? selected.name : doctorId,
+      date,
+      time,
+      reason,
+    });
   }
 
   return (
@@ -102,17 +118,22 @@ function BookingForm({
 
         <form onSubmit={handleSubmit} className="space-y-4">
 
-          {/* Doctor name */}
+          {/* Doctor dropdown */}
           <div>
-            <label className={labelCls}>Doctor Name <span className="text-rose-500">*</span></label>
-            <input
-              type="text"
-              value={doctor}
-              onChange={(e) => setDoctor(e.target.value)}
-              placeholder="e.g. Dr. Sarah Mitchell"
+            <label className={labelCls}>Select Doctor <span className="text-rose-500">*</span></label>
+            <select
+              value={doctorId}
+              onChange={(e) => setDoctorId(e.target.value)}
               className={inputCls}
               required
-            />
+            >
+              <option value="">-- Choose a doctor --</option>
+              {doctors.map((d) => (
+                <option key={d._id} value={d._id}>
+                  {d.name}{d.specialization ? ` — ${d.specialization}` : ""}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Date and time */}
@@ -190,15 +211,21 @@ function BookingForm({
 // ─── Main page ────────────────────────────────────────────────────────────────
 export default function PatientAppointments() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [doctors, setDoctors]           = useState<DoctorOption[]>([]);
   const [loading, setLoading]           = useState(true);
   const [showForm, setShowForm]         = useState(false);
   const [submitting, setSubmitting]     = useState(false);
   const [error, setError]               = useState("");
   const [successMsg, setSuccessMsg]     = useState("");
 
-  // Load appointments on mount
+  // Load appointments and doctors on mount
   useEffect(() => {
     loadAppointments();
+    // Fetch available doctors for the booking dropdown
+    fetchWithAuth("/api/users?role=doctor")
+      .then((r) => r.json())
+      .then((data) => setDoctors(Array.isArray(data) ? data : []))
+      .catch(() => {}); // non-critical; form will still work
   }, []);
 
   async function loadAppointments() {
@@ -217,6 +244,7 @@ export default function PatientAppointments() {
 
   // Book a new appointment
   async function handleBook(formData: {
+    doctorId: string;
     doctor: string;
     date: string;
     time: string;
@@ -316,6 +344,7 @@ export default function PatientAppointments() {
           onSubmit={handleBook}
           onCancel={() => setShowForm(false)}
           submitting={submitting}
+          doctors={doctors}
         />
       )}
 

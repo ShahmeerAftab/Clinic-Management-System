@@ -5,6 +5,12 @@ import { Card } from "@/components/ui/Card";
 import { BackButton } from "@/components/ui/PageHeader";
 import PatientAutocomplete from "@/components/ui/PatientAutocomplete";
 
+interface DoctorOption {
+  _id: string;
+  name: string;
+  specialization?: string;
+}
+
 function formatDate(dateStr: string): string {
   if (!dateStr) return "";
   const iso = dateStr.split("T")[0];
@@ -15,30 +21,32 @@ function formatDate(dateStr: string): string {
 }
 
 type Props = {
-  editingId:       string | null;
-  patients:        Patient[];
-  formPatient:     string;
-  formDob:         string;
-  formDoctor:      string;
-  formDate:        string;
-  formTime:        string;
-  formReason:      string;
-  formStatus:      "Scheduled" | "Cancelled";
-  patientError:    string;
-  submitting?:     boolean;
-  onPatientChange: (id: string, dob: string) => void;
-  onDoctorChange:  (v: string) => void;
-  onDateChange:    (v: string) => void;
-  onTimeChange:    (v: string) => void;
-  onReasonChange:  (v: string) => void;
-  onStatusChange:  (v: "Scheduled" | "Cancelled") => void;
-  onSubmit:        (e: React.FormEvent) => void;
-  onCancel:        () => void;
+  editingId:         string | null;
+  patients:          Patient[];
+  doctors:           DoctorOption[];
+  formPatient:       string;
+  formDob:           string;
+  formDoctor:        string;
+  formDoctorId:      string;
+  formDate:          string;
+  formTime:          string;
+  formReason:        string;
+  formStatus:        "Scheduled" | "Cancelled";
+  patientError:      string;
+  submitting?:       boolean;
+  onPatientChange:   (id: string, dob: string) => void;
+  onDoctorChange:    (name: string, id: string) => void;
+  onDateChange:      (v: string) => void;
+  onTimeChange:      (v: string) => void;
+  onReasonChange:    (v: string) => void;
+  onStatusChange:    (v: "Scheduled" | "Cancelled") => void;
+  onSubmit:          (e: React.FormEvent) => void;
+  onCancel:          () => void;
 };
 
 export default function AppointmentForm({
-  editingId, patients,
-  formPatient, formDob, formDoctor, formDate, formTime, formReason, formStatus,
+  editingId, patients, doctors,
+  formPatient, formDob, formDoctor, formDoctorId, formDate, formTime, formReason, formStatus,
   patientError, submitting,
   onPatientChange, onDoctorChange, onDateChange, onTimeChange,
   onReasonChange, onStatusChange, onSubmit, onCancel,
@@ -92,14 +100,22 @@ export default function AppointmentForm({
               />
             )}
 
-            <Input
+            <Select
               label="Doctor"
               required
-              type="text"
-              placeholder="Dr. Name"
-              value={formDoctor}
-              onChange={(e) => onDoctorChange(e.target.value)}
-            />
+              value={formDoctorId}
+              onChange={(e) => {
+                const selected = doctors.find((d) => d._id === e.target.value);
+                onDoctorChange(selected ? selected.name : "", e.target.value);
+              }}
+            >
+              <option value="">-- Select doctor --</option>
+              {doctors.map((d) => (
+                <option key={d._id} value={d._id}>
+                  {d.name}{d.specialization ? ` — ${d.specialization}` : ""}
+                </option>
+              ))}
+            </Select>
 
             <div className="grid grid-cols-2 gap-3">
               <Input

@@ -10,11 +10,18 @@ import AppointmentForm from "./AppointmentForm";
 
 type Mode = "list" | "book";
 
+interface DoctorOption {
+  _id: string;
+  name: string;
+  specialization?: string;
+}
+
 export default function AppointmentManager({ role }: { role: string }) {
   const toast = useToast();
 
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [patients,     setPatients]     = useState<Patient[]>([]);
+  const [doctors,      setDoctors]      = useState<DoctorOption[]>([]);
   const [mode,         setMode]         = useState<Mode>("list");
   const [editingId,    setEditingId]    = useState<string | null>(null);
   const [submitting,   setSubmitting]   = useState(false);
@@ -23,14 +30,15 @@ export default function AppointmentManager({ role }: { role: string }) {
   const [deleteTarget,  setDeleteTarget]  = useState<string | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  const [formPatient,  setFormPatient]  = useState("");
-  const [formDob,      setFormDob]      = useState("");
-  const [formDoctor,   setFormDoctor]   = useState("");
-  const [formDate,     setFormDate]     = useState("");
-  const [formTime,     setFormTime]     = useState("");
-  const [formReason,   setFormReason]   = useState("");
-  const [formStatus,   setFormStatus]   = useState<"Scheduled" | "Cancelled">("Scheduled");
-  const [patientError, setPatientError] = useState("");
+  const [formPatient,   setFormPatient]   = useState("");
+  const [formDob,       setFormDob]       = useState("");
+  const [formDoctor,    setFormDoctor]    = useState("");
+  const [formDoctorId,  setFormDoctorId]  = useState("");
+  const [formDate,      setFormDate]      = useState("");
+  const [formTime,      setFormTime]      = useState("");
+  const [formReason,    setFormReason]    = useState("");
+  const [formStatus,    setFormStatus]    = useState<"Scheduled" | "Cancelled">("Scheduled");
+  const [patientError,  setPatientError]  = useState("");
 
   useEffect(() => {
     fetchWithAuth("/api/appointment")
@@ -42,10 +50,16 @@ export default function AppointmentManager({ role }: { role: string }) {
       .then((r) => r.json())
       .then(setPatients)
       .catch(console.error);
+
+    // Fetch doctors for the doctor dropdown in the booking form
+    fetchWithAuth("/api/users?role=doctor")
+      .then((r) => r.json())
+      .then((data) => setDoctors(Array.isArray(data) ? data : []))
+      .catch(console.error);
   }, []);
 
   function clearForm() {
-    setFormPatient(""); setFormDob(""); setFormDoctor(""); setFormDate("");
+    setFormPatient(""); setFormDob(""); setFormDoctor(""); setFormDoctorId(""); setFormDate("");
     setFormTime(""); setFormReason(""); setFormStatus("Scheduled");
     setPatientError(""); setEditingId(null);
   }
@@ -62,6 +76,8 @@ export default function AppointmentManager({ role }: { role: string }) {
         : appt.patientID ?? "",
     );
     setFormDoctor(appt.doctor);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    setFormDoctorId((appt as any).doctorId ?? "");
     setFormDate(appt.date);
     setFormTime(appt.time);
     setFormReason(appt.reason);
@@ -76,7 +92,7 @@ export default function AppointmentManager({ role }: { role: string }) {
     setPatientError("");
     setSubmitting(true);
 
-    const payload = { patientID: formPatient, doctor: formDoctor, date: formDate, time: formTime, reason: formReason, status: formStatus };
+    const payload = { patientID: formPatient, doctorId: formDoctorId || undefined, doctor: formDoctor, date: formDate, time: formTime, reason: formReason, status: formStatus };
 
     try {
       if (editingId !== null) {
@@ -182,9 +198,11 @@ export default function AppointmentManager({ role }: { role: string }) {
         <AppointmentForm
           editingId={editingId}
           patients={patients}
+          doctors={doctors}
           formPatient={formPatient}
           formDob={formDob}
           formDoctor={formDoctor}
+          formDoctorId={formDoctorId}
           formDate={formDate}
           formTime={formTime}
           formReason={formReason}
@@ -192,7 +210,7 @@ export default function AppointmentManager({ role }: { role: string }) {
           patientError={patientError}
           submitting={submitting}
           onPatientChange={(id, dob) => { setFormPatient(id); setFormDob(dob); if (id) setPatientError(""); }}
-          onDoctorChange={setFormDoctor}
+          onDoctorChange={(name, id) => { setFormDoctor(name); setFormDoctorId(id); }}
           onDateChange={setFormDate}
           onTimeChange={setFormTime}
           onReasonChange={setFormReason}
